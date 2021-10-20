@@ -51,7 +51,7 @@ pipeline {
 
         DOCKER_GOD_REGISTRY = "docker-app.nsoft.com:10884"
         DOCKER_GOD_REGISTRY_CREDENTIALS_ID = "god-readonly-global"
-        HELM_IMAGE = "helm:3.0.0-phoenix2"
+        HELM_IMAGE = "helm:3.0.0-phoenix1"
 
         HELM_CHART_REGISTRY_URL = "https://chartmuseum.utility.nsoft.cloud/"
         HELM_CHART_REGISTRY_NAME = "chartmuseum"
