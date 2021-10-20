@@ -40,8 +40,8 @@ pipeline {
 
     environment {
 
-        NAMESPACE = "god-zadro" // change
-        TEAM_NAME = "god"  //svn, int, cas, ngs
+        NAMESPACE = "god-zadro" // change , bilo god-zadro
+        TEAM_NAME = "god"  //svn, int, cas, ngs bilo god
 
         DOCKER_REGISTRY = "docker-app.nsoft.com:10884" // 10882-seven 10886-casino 10887-integrations 
         DOCKER_REGISTRY_CREDENTIALS_ID = "docker-bot-test-onboarding" //change (provided via LP ... jenkins.bot.xxx and neeeds to be stored in jenkins credentials)
@@ -51,7 +51,7 @@ pipeline {
 
         DOCKER_GOD_REGISTRY = "docker-app.nsoft.com:10884"
         DOCKER_GOD_REGISTRY_CREDENTIALS_ID = "god-readonly-global"
-        HELM_IMAGE = "helm:3.0.0-phoenix1"
+        HELM_IMAGE = "helm:3.0.0-phoenix2"
 
         HELM_CHART_REGISTRY_URL = "https://chartmuseum.utility.nsoft.cloud/"
         HELM_CHART_REGISTRY_NAME = "chartmuseum"
