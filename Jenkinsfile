@@ -1,7 +1,3 @@
-// https://www.jenkins.io/doc/book/pipeline/syntax/#agent-parameters
-// https://www.jenkins.io/doc/book/pipeline/jenkinsfile/
-// http://groovy-lang.org/syntax.html
-
 #!groovy
 
 def upgradeRelease(Map<String, String> overwrites) {
@@ -26,7 +22,7 @@ def suppressEcho(cmd) {
 
 def getKubeconfig() {
     sh "mkdir -p /root/.kube && touch /root/.kube/config"
-    def secretsFile = "./k8s/rancher-${params.envName}.json" //The parameters directive provides a list of parameters that a user should provide when triggering the Pipeline. The values for these user-specified parameters are made available to Pipeline steps via the params object
+    def secretsFile = "./k8s/rancher-${params.envName}.json"
     echo "Fetching rancher url"
     def rancherURL = suppressEcho("cat ${secretsFile} | jq '.URL' -r").trim()
     echo "Fetching bot token"
@@ -42,9 +38,7 @@ pipeline {
         label 'generic'
     }
 
-    environment { //The environment directive specifies a sequence of key-value pairs which will be defined as environment variables for all steps, or stage-specific steps, depending on where the environment directive is located within the Pipeline.
-
-
+    environment {
 
         NAMESPACE = "god-zadro" // change , bilo god-zadro
         TEAM_NAME = "god"  //svn, int, cas, ngs bilo god
@@ -63,11 +57,9 @@ pipeline {
         HELM_CHART_REGISTRY_NAME = "chartmuseum"
         HELM_CHART_NAME = "nsoft-helm-template-chart"
     }
-    stages { //Containing a sequence of one or more stage directives, the stages section is where the bulk of the "work" described by a Pipeline will be located
+    stages {
 
-        stage('Decrypt files') {  //The steps section defines a series of one or more steps to be executed in a given stage directive.
-
-
+        stage('Decrypt files') {
             steps {
                 withCredentials([
                         file(credentialsId: "${TRANSCRYPT_CREDENTIALS_ID}", variable: 'TR_PASS')
@@ -92,11 +84,11 @@ pipeline {
 
         stage("Deploy") {
             agent {
-                docker { //Execute the Pipeline, or stage, with the given container which will be dynamically provisioned on a node pre-configured to accept Docker-based Pipelines,
+                docker {
                     image "${DOCKER_GOD_REGISTRY}/${HELM_IMAGE}"
-                    args "-u root"   //args parameter which may contain arguments to pass directly to a docker run invocation. A string. Runtime arguments to pass to docker run.
-                    registryUrl "https://${DOCKER_GOD_REGISTRY}" //registryUrl and registryCredentialsId parameters which will help to specify the Docker Registry to use and its credentials
-                    registryCredentialsId "${DOCKER_GOD_REGISTRY_CREDENTIALS_ID}" //The parameter registryCredentialsId could be used alone for private repositories within the docker hub
+                    args "-u root"
+                    registryUrl "https://${DOCKER_GOD_REGISTRY}"
+                    registryCredentialsId "${DOCKER_GOD_REGISTRY_CREDENTIALS_ID}"
                     label "generic"
                 }
             }
@@ -118,19 +110,15 @@ pipeline {
                 deleteDir()
             }
             post {
-                failure { //Only run the steps in post if the current Pipeline’s or stage’s run has a "failed" status, typically denoted by red in the web UI.
-
-
+                failure {
                     sh "helm rollback ${DOCKER_IMAGE} 0 --namespace ${NAMESPACE}"
                 }
             }
         }
 
     }
-    post { //The post section defines one or more additional steps that are run upon the completion of a Pipeline’s or stage’s run
-        always {   //Run the steps in the post section regardless of the completion status of the Pipeline’s or stage’s run.
-
-
+    post {
+        always {
             cleanWs()
         }
     }
