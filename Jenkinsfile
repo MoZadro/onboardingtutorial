@@ -1,3 +1,12 @@
+
+
+//directive supports a special helper method credentials() which can be used to access pre-defined Credentials by their identifier in the Jenkins environment.
+
+// The parameters directive provides a list of parameters that a user should provide when triggering the Pipeline. The values for these user-specified parameters are made available to Pipeline steps via the params object
+
+
+
+
 #!groovy
 
 def upgradeRelease(Map<String, String> overwrites) {
@@ -35,10 +44,10 @@ def getKubeconfig() {
 
 pipeline {
     agent {
-        label 'generic'
+        label 'generic'     // Execute the Pipeline, or stage, on an agent available in the Jenkins environment with the provided label
     }
 
-    environment {
+    environment {     // The environment block has a helper method credentials() defined which can be used to access pre-defined Credentials by their identifier in the Jenkins environment.
 
         NAMESPACE = "god-zadro" // change , bilo god-zadro
         TEAM_NAME = "god"  //svn, int, cas, ngs bilo god
@@ -59,8 +68,10 @@ pipeline {
     }
     stages {
 
-        stage('Decrypt files') {
-            steps {
+        stage('Decrypt files') {        // it is recommended that stages contain at least one stage directive for each discrete part of the continuous delivery process, such as Build, Test, and Deploy.
+            steps {                     // The steps section defines a series of one or more steps to be executed in a given stage directive.
+
+
                 withCredentials([
                         file(credentialsId: "${TRANSCRYPT_CREDENTIALS_ID}", variable: 'TR_PASS')
                 ]) {
@@ -86,9 +97,9 @@ pipeline {
             agent {
                 docker {
                     image "${DOCKER_GOD_REGISTRY}/${HELM_IMAGE}"
-                    args "-u root"
+                    args "-u root"                                                 // A string. Runtime arguments to pass to docker run.
                     registryUrl "https://${DOCKER_GOD_REGISTRY}"
-                    registryCredentialsId "${DOCKER_GOD_REGISTRY_CREDENTIALS_ID}"
+                    registryCredentialsId "${DOCKER_GOD_REGISTRY_CREDENTIALS_ID}"    // docker also optionally accepts a registryUrl and registryCredentialsId parameters which will help to specify the Docker Registry to use and its credentials
                     label "generic"
                 }
             }
@@ -109,7 +120,7 @@ pipeline {
                 }
                 deleteDir()
             }
-            post {
+            post {                                // The post section defines one or more additional steps that are run upon the completion of a Pipeline’s or stage’s run
                 failure {
                     sh "helm rollback ${DOCKER_IMAGE} 0 --namespace ${NAMESPACE}"
                 }
