@@ -1,12 +1,3 @@
-
-
-//directive supports a special helper method credentials() which can be used to access pre-defined Credentials by their identifier in the Jenkins environment.
-
-// The parameters directive provides a list of parameters that a user should provide when triggering the Pipeline. The values for these user-specified parameters are made available to Pipeline steps via the params object
-
-
-
-
 #!groovy
 
 def upgradeRelease(Map<String, String> overwrites) {
