@@ -107,7 +107,7 @@ pipeline {
                             "imageCredentials.username": USERNAME,
                             "imageCredentials.password": PASSWORD,
                             "imageCredentials.registry": DOCKER_REGISTRY,
-                            "envSecret[0].TEST1"       : JENKINS_VARIJABLA
+                            "envSecret.TEST1"          : JENKINS_VARIJABLA
 
                     ])
                 }
