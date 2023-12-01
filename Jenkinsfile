@@ -44,7 +44,7 @@ pipeline {
 
     environment {     // The environment block has a helper method credentials() defined which can be used to access pre-defined Credentials by their identifier in the Jenkins environment.
 
-        NAMESPACE = "god-test" // change , bilo god-zadro
+        NAMESPACE = "god-zadro" // change , bilo god-zadro
         TEAM_NAME = "god"  //svn, int, cas, ngs bilo god
 
         DOCKER_REGISTRY = "docker-app.nsoft.com:10884" // 10882-seven 10886-casino 10887-integrations 
