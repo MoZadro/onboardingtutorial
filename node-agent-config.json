@@ -1,0 +1,71 @@
+{
+    "loadConcurrency": {
+        "globalConfig": 9,
+        "perNodeConfig": [
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n03"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n01"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n05"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n09"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n06"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n011"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n04"
+                    }
+                },
+                "number": 8
+            },
+            {
+                "nodeSelector": {
+                    "matchLabels": {
+                        "kubernetes.io/hostname": "s-k8ssbk-bmw-c01n010"
+                    }
+                },
+                "number": 8
+            }
+        ]
+    }
+}
