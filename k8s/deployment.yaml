@@ -1,16 +1,16 @@
-# {{- if .Values.persistentVolume }}
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: {{ .Release.Name }}-pvc
-# spec:
-#   accessModes:
-#     - {{ .Values.persistentVolume.accessMode | default "ReadWriteOnce"}}
-#   resources:
-#     requests:
-#       storage: {{ .Values.persistentVolume.size }}
-#   storageClassName: {{ .Values.persistentVolume.storageClassName | default "lh-primary"}}
-# {{- end }}
+{{- if .Values.persistentVolume }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-pvc
+spec:
+  accessModes:
+    - {{ .Values.persistentVolume.accessMode | default "ReadWriteOnce"}}
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolume.size }}
+  storageClassName: {{ .Values.persistentVolume.storageClassName | default "lh-primary"}}
+{{- end }}
 
 
 
