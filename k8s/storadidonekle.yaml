@@ -1,0 +1,36 @@
+    volumeMounts:
+          - mountPath: /tmp/
+            name: tmp
+        {{- range $existingPersistentVolume := .Values.existingPersistentVolumes}}
+          - mountPath: {{ $existingPersistentVolume.mountPath }}
+            name: {{ $existingPersistentVolume.name }}-volume
+        {{- end }}
+        {{- range $index, $volume := .Values.persistentVolumes }}
+          - name: pvc-{{ $index }}
+            mountPath: {{ $volume.mountPath }}
+        {{- end }}
+
+      volumes:
+      - emptyDir: {}
+        name: tmp
+        {{- range $existingPersistentVolume := .Values.existingPersistentVolumes}}
+      - name: {{ $existingPersistentVolume.name }}-volume
+        persistentVolumeClaim:
+          claimName: {{ $existingPersistentVolume.name }}
+        {{- end }}
+        {{- range $index, $volume := .Values.persistentVolumes }}
+      - name: pvc-{{ $index }}
+        persistentVolumeClaim:
+          claimName: {{ $.Release.Name }}-pvc-{{ $index }}
+        {{- end }}
+
+        {{- if .Values.maxscale}}
+        {{- if eq .Values.maxscale.enabled true}}
+      - emptyDir: {}
+        name: maxscale-home
+      - emptyDir: {}
+        name: maxscale-tmp
+        {{- end }}
+        {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
