@@ -1,11 +1,290 @@
-    volumeMounts:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "nsoft-helm-template-chart.labels" . | nindent 4 }}
+    {{- range $key, $val := .Values.labels }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end}}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "nsoft-helm-template-chart.selectorLabels" . | nindent 6 }}
+  strategy:
+{{ if .Values.persistentVolume }}
+    type: Recreate
+{{ else }}
+    type: {{ .Values.strategy.type }}
+{{- end }}
+  template:
+    metadata:
+      annotations:
+{{ if .Values.annotations }}
+{{- toYaml .Values.annotations | nindent 8 }}
+{{- end }}
+{{ if eq .Values.recreatePods true }}
+        releaseTime: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }}
+{{- end }}
+      labels:
+        {{- include "nsoft-helm-template-chart.selectorLabels" . | nindent 8 }}
+        app: {{ .Release.Name }}
+        {{- range $key, $val := .Values.labels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end}}
+
+        {{- if or (eq .Values.maxscale.enabled true) (eq .Values.nat.enabled true) }}
+        io.cilium/egress-gateway: enabled
+        {{- end}}
+
+        {{- if eq .Values.logging.enabled true }}
+        logging: "true"
+        {{- end}}
+
+    spec:
+{{ if .Values.internalHostAliases }}
+      hostAliases:
+      - ip: {{ .Values.internalHostAliases.ip }}
+        hostnames:
+{{- toYaml .Values.internalHostAliases.hostnames | nindent 8 }}
+{{- end  }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+
+      priorityClassName:
+        {{- if eq .Values.priority "medium" }}
+        app-medium
+        {{- else if eq .Values.priority "high" }}
+        app-high
+        {{- else if eq .Values.priority "critical" }}
+        app-critical
+        {{- else }}
+        app-low
+        {{- end }}
+
+
+{{- if .Values.serviceAccountName }}
+      serviceAccount: {{ .Values.serviceAccountName }}
+{{- else if .Values.vault }}
+      serviceAccount: {{ .Release.Name }}-service-account
+{{- end }}
+{{- if .Values.hostname }}
+      hostname: {{ .Values.hostname }}
+{{- end }}
+      imagePullSecrets:
+{{- if .Values.vault }}
+        - name: {{ .Release.Name }}-bot-{{ .Values.teamName }}-external-docker
+{{ else }}
+        - name: {{ .Release.Name }}-{{ template "dockerSecretName" . }}
+{{ end }}
+{{ if .Values.maxscale }}
+{{ if eq .Values.maxscale.enabled true}}
+{{- if .Values.vault }}
+        - name: {{ .Release.Name }}-bot-sys-external-docker
+{{ else }}
+        - name: {{ .Release.Name }}-docker-bot-sys
+{{- end }}
+{{- end }}
+{{- end }}
+{{ if .Values.podAntiAffinity }}
+      affinity:
+{{ if eq .Values.podAntiAffinity "required" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - {{ .Release.Name }}
+            topologyKey: kubernetes.io/hostname
+{{- end }}
+{{ if eq .Values.podAntiAffinity "preferred" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - k8s-test
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+{{- end }}
+{{- end }}
+{{- if .Values.persistentVolume }}
+      volumes:
+      - name: {{ .Release.Name }}-volume
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-pvc
+{{- end }}
+{{ if .Values.dnsConfig }}
+      dnsConfig:
+{{- toYaml .Values.dnsConfig | nindent 8 }}
+{{- end }}
+      containers:
+        {{- if .Values.maxscale}}
+        {{- if eq .Values.maxscale.enabled true}}
+        - name: {{ .Values.maxscale.name | default "maxscale" }}
+          image: {{ .Values.maxscale.repository }}/{{ .Values.maxscale.image | default "maxscale" }}:{{ .Values.maxscale.version }}
+          imagePullPolicy: {{ .Values.maxscale.pullPolicy | default "Always"}}
+          ports:
+          - containerPort: {{ .Values.maxscale.port | default 3306 }}
+          env:
+          - name: SERVERS
+            value: {{ .Values.maxscale.servers }}
+          - name: MAXSCALE_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: MAXSCALE_USER_PASSWORD
+                name: maxscale-{{ .Release.Name }}-password
+        {{- if .Values.maxscale.services}}
+          - name: SERVICES
+            value: {{ .Values.maxscale.services }}
+        {{- end }}
+        {{- if .Values.maxscale.qc_cache_size}}
+          - name: QC_CACHE
+            value: {{ .Values.maxscale.qc_cache_size | default "5Mi" }}
+        {{- end }}
+          resources:
+{{- toYaml .Values.maxscale.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.maxscale.securityContext | nindent 12 }}
+{{ if .Values.maxscale.lifecycle }}
+          lifecycle:
+{{- toYaml .Values.maxscale.lifecycle | nindent 12 }}
+{{- end }}
+          readinessProbe:
+            failureThreshold: 3
+            periodSeconds: 20
+            successThreshold: 1
+            tcpSocket:
+              port: 3306
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            periodSeconds: 20
+            successThreshold: 1
+            tcpSocket:
+              port: 3306
+            timeoutSeconds: 1
+          volumeMounts:
+          - mountPath: /home/maxscale/
+            name: maxscale-home
+          - mountPath: /tmp/
+            name: maxscale-tmp
+          {{- end }}
+          {{- end }}
+
+        - name: {{ .Release.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.imageCredentials.registry }}/{{ .Values.image.name }}:{{ .Values.image.appVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.execCommand }}
+          command: {{- toYaml .Values.execCommand.command | nindent 14 }}
+          args: {{- toYaml .Values.execCommand.args | nindent 14 }}
+          {{- end}}
+          {{- if .Values.service.type }}
+          ports:
+          {{- range $ports := .Values.service.ports}}
+          {{ $defaultPort := print "port-" $ports.port  }}
+            - name: {{ $ports.name | default $defaultPort}}
+              containerPort: {{ $ports.port }}
+              protocol: {{ $ports.protocol | default "TCP" }}
+          {{- end }}
+          {{- end }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+            {{- include "helpers.list-env-variables" . | nindent 12 }}
+            {{- range $jsons := .Values.envJson }}
+            - name: {{ $jsons.name }}
+              valueFrom:
+                secretKeyRef:
+                  name: env-secret-{{ lower $jsons.name }}
+                  key: {{ $jsons.name }}
+            {{- end}}
+          livenessProbe:
+            {{- if .Values.livenessProbe.port}}
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: {{ .Values.livenessProbe.port }}
+              httpHeaders:
+              {{- if .Values.livenessProbe.httpHeaders}}
+              {{- toYaml .Values.livenessProbe.httpHeaders | nindent 14 }}
+              {{- end }}
+            {{ else }}
+            exec:
+              command: {{- toYaml .Values.livenessProbe.execCommand | nindent 14 }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds  }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds  }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold  }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold  }}
+
+          readinessProbe:
+            {{- if .Values.readinessProbe.port}}
+            httpGet:
+              path: {{ .Values.readinessProbe.path | default "/"}}
+              port: {{ .Values.readinessProbe.port }}
+              httpHeaders:
+              {{- if .Values.readinessProbe.httpHeaders}}
+              {{- toYaml .Values.readinessProbe.httpHeaders | nindent 14 }}
+              {{- end }}
+            {{ else }}
+            exec:
+              command: {{- toYaml .Values.readinessProbe.execCommand | nindent 14 }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds  }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds  }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold  }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold  }}
+
+         {{- if .Values.startupProbe}}
+          startupProbe:
+            {{- if .Values.startupProbe.port}}
+            httpGet:
+              path: {{ .Values.startupProbe.path }}
+              port: {{ .Values.startupProbe.port }}
+              httpHeaders:
+              {{- if .Values.startupProbe.httpHeaders}}
+              {{- toYaml .Values.startupProbe.httpHeaders | nindent 14 }}
+              {{- end }}
+            {{ else }}
+            exec:
+              command: {{- toYaml .Values.startupProbe.execCommand | nindent 14 }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds | default 30  }}
+            periodSeconds: {{ .Values.startupProbe.periodSeconds | default 30 }}
+            timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.startupProbe.successThreshold | default 1  }}
+            failureThreshold: {{ .Values.startupProbe.failureThreshold | default 1 }}
+          {{- end }}
+{{ if .Values.lifecycle }}
+          lifecycle:
+{{- toYaml .Values.lifecycle | nindent 12 }}
+{{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
           - mountPath: /tmp/
             name: tmp
+
+
         {{- range $existingPersistentVolume := .Values.existingPersistentVolumes}}
           - mountPath: {{ $existingPersistentVolume.mountPath }}
             name: {{ $existingPersistentVolume.name }}-volume
         {{- end }}
+{{- if .Values.persistentVolume }}
+          - mountPath: {{ .Values.persistentVolume.mountPath }}
+            name: {{ $.Release.Name }}-volume
+{{- end }}
+
         {{- range $index, $volume := .Values.persistentVolumes }}
+    # Handling for new version (multiple volumes)
           - name: pvc-{{ $index }}
             mountPath: {{ $volume.mountPath }}
         {{- end }}
@@ -18,7 +297,17 @@
         persistentVolumeClaim:
           claimName: {{ $existingPersistentVolume.name }}
         {{- end }}
+
+
+      {{- if .Values.persistentVolume }}
+      - name: {{ $.Release.Name }}-volume
+        persistentVolumeClaim:
+          claimName: {{ $.Release.Name }}-pvc
+        {{- end }}
+
+
         {{- range $index, $volume := .Values.persistentVolumes }}
+    # Handling for new version (multiple volumes)
       - name: pvc-{{ $index }}
         persistentVolumeClaim:
           claimName: {{ $.Release.Name }}-pvc-{{ $index }}
@@ -34,3 +323,40 @@
         {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+
+
+---
+
+
+{{- if .Values.persistentVolumes }}
+  # Newer version with multiple persistent volumes
+  {{- range $index, $volume := .Values.persistentVolumes }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $.Release.Name }}-pvc-{{ $index }}
+spec:
+  accessModes:
+    - {{ $volume.accessMode | default "ReadWriteOnce" }}
+  resources:
+    requests:
+      storage: {{ $volume.size }}
+  storageClassName: {{ $volume.storageClassName | default "lh-primary" }}
+---
+  {{- end }}
+{{- else if .Values.persistentVolume }}
+  # Older version with a single persistent volume
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $.Release.Name }}-pvc
+spec:
+  accessModes:
+    - {{ .Values.persistentVolume.accessMode | default "ReadWriteOnce" }}
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolume.size }}
+  storageClassName: {{ .Values.persistentVolume.storageClassName | default "lh-primary" }}
+---
+{{- end }}
