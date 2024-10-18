@@ -61,7 +61,7 @@ pipeline {
 
         HELM_CHART_REGISTRY_URL = "https://chartmuseum.utility.nsoft.cloud/"
         HELM_CHART_REGISTRY_NAME = "chartmuseum"
-        HELM_CHART_NAME = "nsoft-helm-template-chart"
+        HELM_CHART_NAME = "nsoft-helm-cronjob-template"
     }
     stages {
 
