@@ -15,7 +15,7 @@ def upgradeRelease(Map<String, String> overwrites) {
     sh "helm repo add ${HELM_CHART_REGISTRY_NAME} ${HELM_CHART_REGISTRY_URL}"
     sh "helm repo update"
     //sh "./findfailed.sh ${NAMESPACE} ${DOCKER_IMAGE}"
-    sh "helm upgrade --wait --force --install --atomic --timeout 500s --namespace=${NAMESPACE} ${DOCKER_IMAGE} ${HELM_CHART_REGISTRY_NAME}/${HELM_CHART_NAME} --version ${params.helmChartVersion}  -f ./k8s/values-${params.envName}.yaml" + arguments
+    sh "helm upgrade --wait --install --atomic --timeout 500s --namespace=${NAMESPACE} ${DOCKER_IMAGE} ${HELM_CHART_REGISTRY_NAME}/${HELM_CHART_NAME} --version ${params.helmChartVersion}  -f ./k8s/values-${params.envName}.yaml" + arguments
 }
 
 //uklonio --debug
