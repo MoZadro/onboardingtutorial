@@ -25,16 +25,16 @@ def suppressEcho(cmd) {
 }
 
 def getKubeconfig() {
-    withCredentials([[$class          : 'UsernamePasswordMultiBinding',
-                      credentialsId   : "${params.rancherToken}",
-                      usernameVariable: 'RANCHER_URL',
-                      passwordVariable: 'RANCHER_TOKEN']]) {
-        sh "mkdir -p /root/.kube && touch /root/.kube/config"
-        echo "Fetching clusterId"
-        def clusterId = suppressEcho("curl -H 'Authorization: Bearer ${RANCHER_TOKEN}' ${RANCHER_URL}/v3/clusters?name=${params.clusterName} | jq '.data[0].id' -r").trim()
-        echo "Fetching cluster kubeconfig"
-        suppressEcho("curl -u \"${RANCHER_TOKEN}\" -X POST -H 'Accept: application/yaml' -H 'Content-Type: application/yaml' -d '{}' '${RANCHER_URL}/v3/clusters/${clusterId}?action=generateKubeconfig' | awk '/config:/{f=1;next} /type:/{f=0} f' >> /root/.kube/config")
-    }
+    sh "mkdir -p /root/.kube && touch /root/.kube/config"
+    def secretsFile = "./k8s/rancher-${params.envName}.json"
+    echo "Fetching rancher url"
+    def rancherURL = suppressEcho("cat ${secretsFile} | jq '.URL' -r").trim()
+    echo "Fetching bot token"
+    def botToken = suppressEcho("cat ${secretsFile} | jq '.token' -r").trim()
+    echo "Fetching clusterId"
+    def clusterId = suppressEcho("curl -H 'Authorization: Bearer ${botToken}' ${rancherURL}/v3/clusters?name=${params.clusterName} | jq '.data[0].id' -r").trim()
+    echo "Fetching cluster kubeconfig"
+    suppressEcho("curl -u \"${botToken}\" -X POST -H 'Accept: application/yaml' -H 'Content-Type: application/yaml' -d '{}' '${rancherURL}/v3/clusters/${clusterId}?action=generateKubeconfig' | awk '/config:/{f=1;next} /type:/{f=0} f' >> /root/.kube/config")
 }
 
 pipeline {
