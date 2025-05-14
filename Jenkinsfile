@@ -55,7 +55,7 @@ pipeline {
         TRANSCRYPT_CREDENTIALS_ID = "transcrypt-onboardingtutorial" //change TRANSCRIPT SECRETFILE
 
         DOCKER_GOD_REGISTRY = "docker-app.nsoft.com:10884"
-        DOCKER_GOD_REGISTRY_CREDENTIALS_ID = "god-readonly-global"
+        DOCKER_GOD_REGISTRY_CREDENTIALS_ID = "63766cec-fc10-419b-aa46-44ed7915bc05"
         //HELM_IMAGE = "helm:3.0.0-phoenix1"
         HELM_IMAGE = "helm:3.8.1-phoenix0"
 
