@@ -7,6 +7,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
@@ -16,6 +18,7 @@ import java.util.UUID;
 @RestController
 public class Application {
 
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private static final String APP_NAME = "onboardingtutorial";
 
     public static void main(String[] args) {
@@ -28,9 +31,9 @@ public class Application {
     }
 
     @GetMapping("/logs")
-    public String logToConsole() {
+    public String logToFile() {
         String uuid = UUID.randomUUID().toString();
-        System.out.println("UUID: " + uuid + ", App: " + APP_NAME);
-        return "Log sent to console.";
+        logger.info("UUID: {}, App: {}", uuid, APP_NAME);
+        return "Log sent to file.";
     }
 }
