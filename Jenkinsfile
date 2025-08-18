@@ -49,7 +49,7 @@ pipeline {
 
         DOCKER_REGISTRY = "docker-app.nsoft.com:10884" // 10882-seven 10886-casino 10887-integrations 
         DOCKER_REGISTRY_CREDENTIALS_ID = "docker-bot-test-onboarding" //change (provided via LP ... jenkins.bot.xxx and neeeds to be stored in jenkins credentials) NEXUS
-        DOCKER_IMAGE = "onboardingtutorialtest" //change (project name or something)
+        DOCKER_IMAGE = "onboardingtutorial" //change (project name or something)
         JENKINS_VARIJABLA = "Vrijednost"
         JENKINS_VARIJABLA1 = "Vrijednost2"
         TRANSCRYPT_CREDENTIALS_ID = "transcrypt-onboardingtutorial" //change TRANSCRIPT SECRETFILE
