@@ -1,8 +1,10 @@
 package com.dockerforjavadevelopers.hello;
 
-
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
 
 @RestController
 public class HelloController {
@@ -16,5 +18,4 @@ public class HelloController {
     public ResponseEntity<Map<String, String>> debugHeaders(@RequestHeader Map<String, String> headers) {
         return ResponseEntity.ok(headers);
     }
-    
 }
